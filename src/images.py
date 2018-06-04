@@ -67,19 +67,14 @@ def GenerateImage(Background, *Layers, Scale=1, MarkOrigPoints=True, BlankColor=
 
     sat = 40
     lum = 50
+    hue_step = int(360/(len(Layers)+1))
+    hue_list = [i for i in range(0,361,hue_step)][1:]
+    hsl_list = ['hsl('+str(hue)+', '+str(sat)+'%, '+str(lum)+'%)' for hue in hue_list]
 
     for y in range(height):
         for x in range(width):
-            try: pixels[x,y] = color_map[Background[y][x]]
-            except: pixels[x,y] = (255,0,0)
-
-    hue_step = int(360/(len(Layers)+1))
-    hue_list = [i for i in range(0,361,hue_step)][1:]
-
-    for layer, hue in zip(Layers, hue_list):
-        hsl = 'hsl('+str(hue)+', '+str(sat)+'%, '+str(lum)+'%)'
-        for y in range(height):
-            for x in range(width):
+            pixels[x,y] = color_map[Background[y][x]]
+            for layer, hsl in zip(Layers, hsl_list):
                 if layer[y][x]: pixels[x,y] = GetRGB(hsl)
 
     if Scale != 1:

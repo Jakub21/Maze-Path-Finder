@@ -61,46 +61,6 @@ def GetParser():
     return parser
 
 
-################################
-def Main(Arg):
-    '''main.Main [Arg]
-    Calls all functions in order that depends on user's input
-    --------------------------------
-    Parameters
-    - Arg (argparse namespace):
-        - width             | Width of a maze
-        - height            | Height of a maze
-        - pta_x             | X coordinate of starting point
-        - pta_y             | Y coordinate of starting point
-        - ptb_x             | X coordinate of finish point
-        - ptb_y             | Y coordinate of finish point
-        - path              | [Optional] Path to image to load maze from
-    --------------------------------
-    Returns
-    - Path, list of points
-    '''
-    Log.info('Arguments:\n  '+'\n  '.join([str(key)+': '+str(value)
-        for key, value in Arg.__dict__.items()]))
-    global SIZE, PTA, PTB
-    SIZE = (Arg.width, Arg.height)
-    PTA = (Arg.pta_x, Arg.pta_y)
-    PTB = (Arg.ptb_x, Arg.ptb_y)
-    WALL, BLANK = False, True
-
-    Log.info('Points: '+str(PTA)+' '+str(PTB))
-    Log.info('Straight line distance: '+str(round(pf.CheckDistance(PTA, PTB),1)))
-
-    maze.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
-    img.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
-    pf.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
-
-    Maze = maze.GetMaze()
-    Path = pf.FindPath(Maze)
-
-    Log.info('Path length: '+str(len(Path)))
-    return (Maze, Path)
-
-
 
 ################################
 if __name__ == '__main__':
@@ -117,8 +77,26 @@ if __name__ == '__main__':
     parser = GetParser()
     args = parser.parse_args()
 
-    maze, path = Main(args)
+    Log.info('Arguments:\n  '+'\n  '.join([str(key)+': '+str(value)
+        for key, value in args.__dict__.items()]))
+    global SIZE, PTA, PTB
+    SIZE = (args.width, args.height)
+    PTA = (args.pta_x, args.pta_y)
+    PTB = (args.ptb_x, args.ptb_y)
+    WALL, BLANK = False, True
 
-    path_map = MarkPoints(path)
-    image = img.GenerateImage(maze, path_map, Scale=4)
+    Log.info('Points: '+str(PTA)+' '+str(PTB))
+    Log.info('Straight line distance: '+str(round(pf.CheckDistance(PTA, PTB),1)))
+
+    maze.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
+    img.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
+    pf.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
+
+    Maze = maze.GetMaze()
+    Path = pf.FindPath(Maze)
+
+    Log.info('Path length: '+str(len(Path)))
+
+    path_map = MarkPoints(Path)
+    image = img.GenerateImage(Maze, path_map, Scale=4)
     image.save('path.png')

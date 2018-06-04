@@ -76,13 +76,13 @@ def GetMaze():
     - Maze                  | 2D list, size and values are in global variables
     '''
     Log.info('Generating maze')
-    width, height = SIZE
-    num_of_chunks = (width * height)//3
+    width, height = [el+1 for el in SIZE]
+    num_of_chunks = ceil(width * height /9)
     max_chunk_id = 10
 
     id_list = []
     while len(id_list) < num_of_chunks: id_list.append(randrange(max_chunk_id+1))
-    id_list = [id_list[x:x+width] for x in range(0, len(id_list), width)]
+    id_list = [id_list[x:x+ceil(width/3)] for x in range(0, len(id_list), (width//3))]
     chunks = {id:GenerateChunk(id) for id in range(max_chunk_id+1)}
 
     Result = []
@@ -90,5 +90,6 @@ def GetMaze():
         for row_index in range(3):
             row = []
             for id in id_row: row += chunks[id][row_index]
+            row = row[:width]
             Result.append(row)
-    return Result
+    return Result[:height]

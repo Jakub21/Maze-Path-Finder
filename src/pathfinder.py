@@ -70,12 +70,11 @@ def StepDir(Old, New):
     '''
     xa, ya = Old
     xb, yb = New
-    if xb > xa: step = 'Right'
-    elif xb < xa: step = 'Left'
-    elif yb > ya: step = 'Down'
-    elif yb < ya: step = 'Up'
-    else: step = 'None'
-    return step
+    if xb > xa: return 'Right'
+    elif xb < xa: return 'Left'
+    elif yb > ya: return 'Down'
+    elif yb < ya: return 'Up'
+    else: return 'None'
 
 
 
@@ -114,6 +113,8 @@ def AddStep(Maze, Range):
                 NewRange[y][x] = True
     return NewRange
 
+
+
 ################################
 def GetMidPoint(Maze, ptA, ptB):
     '''pathfinder.GetMidPoint [Maze] [ptA] [ptB]
@@ -128,28 +129,22 @@ def GetMidPoint(Maze, ptA, ptB):
     Returns
     - Path                  | Point (2-tuple: x-coord, y-coord)
     '''
-
-    import src.images as img
-
     width, height = SIZE
     range_a = [[False for x in range(width)] for y in range(height)]
     range_b = [[False for x in range(width)] for y in range(height)]
     range_a[ptA[1]][ptA[0]] = True
     range_b[ptB[1]][ptB[0]] = True
-    Matches = []
-    dist = 0
-    while Matches == []:
+    Match = ()
+    while Match == ():
         range_a = AddStep(Maze, range_a)
         range_b = AddStep(Maze, range_b)
-        dist += 1
         pts_in_a = []
         pts_in_b = []
         for y in range(height):
             for x in range(width):
-                if range_a[y][x]: pts_in_a.append((x,y))
-                if range_b[y][x]: pts_in_b.append((x,y))
-        Matches = [el for el in pts_in_a if el in pts_in_b]
-    return Matches[0]
+                if range_a[y][x] and range_b[y][x]:
+                    Match = (x,y)
+    return Match
 
 
 
@@ -170,10 +165,8 @@ def FindPath(Maze):
     pta = PTA
     while pta != PTB:
         new = PTB
-        mp_index = 0
         while CheckDistance(pta, new) > 1:
             new = GetMidPoint(Maze, pta, new)
-            mp_index += 1
         Path.append(pta)
         Log.info('Direction: '+StepDir(pta, new))
         pta = new
