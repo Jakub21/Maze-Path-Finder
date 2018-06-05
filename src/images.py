@@ -25,7 +25,7 @@ def InitGlobals(Size, PtA, PtB, Values):
     Function must be called before any other in this file
     --------------------------------
     Parameters
-    - Size                  | Size of a maze to generate (2-tuple: width, height)
+    - Size                  | Size of a maze to generate (2-tpl.: width, height)
     - PtA                   | Starting point (2-tuple: x-coord, y-coord)
     - PtB                   | Starting point (2-tuple: x-coord, y-coord)
     - Values                | 2-tuple: Wall value, Blank value
@@ -41,17 +41,62 @@ def InitGlobals(Size, PtA, PtB, Values):
 
 
 ################################
-def GenerateImage(Background, *Layers, Scale=1, MarkOrigPoints=True, BlankColor=(255,255,255), WallColor=(0,0,0)):
-    '''images.GenerateImage [Background] {*Layers} {Scale} {MarkOrigPoints} {BlankColor} {WallColor}
+def GetSize(FileName):
+    '''images.GetSize [FileName]
+    Reads size of image
+    --------------------------------
+    Parateters
+    - FileName              | Name of file to load data from
+    --------------------------------
+    Returns
+    - Size                  | 2-tuple: width, height
+    '''
+    Image = ImageClass.open(FileName)
+    return Image.size
+
+
+
+################################
+def GetMazeImg(FileName):
+    '''images.GetMazeImg [FileName]
+    Loads image and converts is to a 2D list.
+    Black pixels are mapped to walls and white to empty points.
+    No support for 32-bit images (color is a 3-tuple, no alpha chanel)
+    Pixels that are not black neither white are mapped to empty points.
+    --------------------------------
+    Parateters
+    - FileName              | Name of file to load data from
+    --------------------------------
+    Returns
+    - Maze                  | 2D list, size and values are in global variables
+    '''
+    Log.info('Loading maze')
+    width, height = SIZE
+    Image = ImageClass.open(FileName)
+    pixels = Image.load()
+    Result = [[True for x in range(width)] for y in range(height)]
+    for y in range(height):
+        for x in range(width):
+            if pixels[x,y] == (0,0,0): Result[y][x] = False
+    return Result
+
+
+
+################################
+def GenerateImage(Background, *Layers, Scale=1, MarkOrigPoints=True,
+        BlankColor=(255,255,255), WallColor=(0,0,0)):
+    '''images.GenerateImage [Background] {*Layers} {Scale} {MarkOrigPoints}
+        {BlankColor} {WallColor}
     Generates an image from multiple 2D lists.
     In other layers, in cells with value 'False' pixel is not changed
-    and in cells with value 'True' pixel is changed to color based on layer index.
+    and in cells with value 'True',
+    pixel is changed to color based on layer index.
     --------------------------------
     Parameters
-    - Background            | 2D list only with values matching globals WALL and BLANK
+    - Background            | 2D list only with values matching WALL and BLANK
     - *Layers               | 2D list only with booleans.
     - Scale                 | Image scaling factor, default is 1 (int)
-    - BlankColor            | [Optional] Color for cells with BLANK (3-tuple:RGB)
+    - BlankColor            | [Optnl.] Color for cells with BLANK (3-tuple:RGB)
     - WallColor             | [Optional] Color for cells with WALL (3-tuple:RGB)
     --------------------------------
     Returns
@@ -69,7 +114,8 @@ def GenerateImage(Background, *Layers, Scale=1, MarkOrigPoints=True, BlankColor=
     lum = 50
     hue_step = int(360/(len(Layers)+1))
     hue_list = [i for i in range(0,361,hue_step)][1:]
-    hsl_list = ['hsl('+str(hue)+', '+str(sat)+'%, '+str(lum)+'%)' for hue in hue_list]
+    hsl_list = ['hsl('+str(hue)+', '+str(sat)+'%, '+str(lum)+'%)'
+        for hue in hue_list]
 
     for y in range(height):
         for x in range(width):

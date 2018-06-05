@@ -24,7 +24,7 @@ def InitGlobals(Size, PtA, PtB, Values):
     Function must be called before any other in this file
     --------------------------------
     Parameters
-    - Size                  | Size of a maze to generate (2-tuple: width, height)
+    - Size                  | Size of a maze to generate (2-tpl.: width, height)
     - PtA                   | Starting point (2-tuple: x-coord, y-coord)
     - PtB                   | Starting point (2-tuple: x-coord, y-coord)
     - Values                | 2-tuple: Wall value, Blank value
@@ -81,8 +81,9 @@ def GetMaze():
     max_chunk_id = 10
 
     id_list = []
-    while len(id_list) < num_of_chunks: id_list.append(randrange(max_chunk_id+1))
-    id_list = [id_list[x:x+ceil(width/3)] for x in range(0, len(id_list), (width//3))]
+    while len(id_list)<num_of_chunks: id_list.append(randrange(max_chunk_id+1))
+    id_list = [ id_list[x:x+ceil(width/3)]
+        for x in range(0, len(id_list), (width//3))]
     chunks = {id:GenerateChunk(id) for id in range(max_chunk_id+1)}
 
     Result = []

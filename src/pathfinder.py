@@ -23,7 +23,7 @@ def InitGlobals(Size, PtA, PtB, Values):
     Function must be called before any other in this file
     --------------------------------
     Parameters
-    - Size                  | Size of a maze to generate (2-tuple: width, height)
+    - Size                  | Size of a maze to generate (2-tpl.: width, height)
     - PtA                   | Starting point (2-tuple: x-coord, y-coord)
     - PtB                   | Starting point (2-tuple: x-coord, y-coord)
     - Values                | 2-tuple: Wall value, Blank value
@@ -35,6 +35,27 @@ def InitGlobals(Size, PtA, PtB, Values):
     PTA, PTB = PtA, PtB
     global WALL, BLANK
     WALL, BLANK = Values
+
+
+
+################################
+def MarkPoints(PointList):
+    '''pathfinder.MarkPoints [PointList]
+    Creates 2D list, filled with False.
+    Value is changed to True if coordinate is in supplied list
+    --------------------------------
+    Parameters
+    - PointList             | List of points to mark
+    --------------------------------
+    Returns
+    - Map                   | 2D list with booleans
+    '''
+    width, height = SIZE
+    Map = [[False for x in range(width)] for y in range(height)]
+    for pt in PointList:
+        x, y = pt
+        Map[y][x] = True
+    return Map
 
 
 
@@ -85,7 +106,7 @@ def AddStep(Maze, Range):
     create map of points that could be reached in x+1 moves.
     --------------------------------
     Parameters
-    - Maze                  | 2D list only with values matching globals WALL and BLANK
+    - Maze                  | 2D list only with values matching WALL and BLANK
     - Range                 | 2D list (booleans (reachable or not))
     --------------------------------
     Returns
@@ -122,7 +143,7 @@ def GetMidPoint(Maze, ptA, ptB):
     Distances midpoint-ptA and midpoint-ptB are equal (+-1).
     --------------------------------
     Parameters
-    - Maze                  | 2D list only with values matching globals WALL and BLANK
+    - Maze                  | 2D list only with values matching WALL and BLANK
     - ptA                   | Point (2-tuple: x-coord, y-coord)
     - ptB                   | Point (2-tuple: x-coord, y-coord)
     --------------------------------
@@ -155,7 +176,7 @@ def FindPath(Maze):
     Points are global variables PTA and PTB
     --------------------------------
     Parameters
-    - Maze                  | 2D list only with values matching globals WALL and BLANK
+    - Maze                  | 2D list only with values matching WALL and BLANK
     --------------------------------
     Returns
     - Path                  | List of points (2-tuple: x-coord, y-coord)

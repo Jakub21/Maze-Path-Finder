@@ -19,23 +19,25 @@ import logging
 
 
 ################################
-def MarkPoints(PointList):
-    '''main.MarkPoints [PointList]
-    Creates 2D list, filled with False.
-    Value is changed to True if coordinate is in supplied list
+def getLogger():
+    '''main.getLogger
+    Creates Logger object
     --------------------------------
-    Parameters
-    - PointList             | List of points to mark
+    No parameters
     --------------------------------
     Returns
-    - Map                   | 2D list with booleans
+    - logging.Logger object
     '''
-    width, height = SIZE
-    Map = [[False for x in range(width)] for y in range(height)]
-    for pt in PointList:
-        x, y = pt
-        Map[y][x] = True
-    return Map
+    logging_level = logging.INFO
+    Log = logging.getLogger('MainLogger')
+    Log.setLevel(logging_level)
+    formatter_string = '[%(asctime)s][%(filename)s:%(lineno)d] %(message)s'
+    formatter = logging.Formatter(formatter_string, '%H:%M:%S')
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging_level)
+    console_handler.setFormatter(formatter)
+    Log.addHandler(console_handler)
+    return Log
 
 
 
@@ -50,53 +52,82 @@ def GetParser():
     - argparse.ArgumentParser object
     '''
     parser = ArgumentParser(description = 'Find shortest path in maze')
-    parser.add_argument('width', type=int, help='Width of the maze')
-    parser.add_argument('height', type=int, help='Height of the maze')
-    parser.add_argument('pta_x', type=int, help='Start point: x coord.')
-    parser.add_argument('pta_y', type=int, help='Start point: y coord.')
-    parser.add_argument('ptb_x', type=int, help='Finish point: x coord')
-    parser.add_argument('ptb_y', type=int, help='Finish point: y coord')
-    #parser.add_argument('--path', type=str, action='store_const',
-    #    help='Load maze from file instead')
+    parser.add_argument('pta',default=[None],action='store',nargs=2,
+        type=int,help='Define starting point')
+    parser.add_argument('ptb',default=[None],action='store',nargs=2,
+        type=int,help='Define finish point')
+    parser.add_argument('-rand',default=[None],action='store',nargs=2,
+        type=int,help='Generate random maze')
+    parser.add_argument('-file',default=None,action='store',
+        type=str,help='Load maze from file')
     return parser
 
 
 
 ################################
 if __name__ == '__main__':
-    logging_level = logging.INFO
-    Log = logging.getLogger('MainLogger')
-    Log.setLevel(logging_level)
-    formatter = logging.Formatter('[%(asctime)s][%(filename)s:%(lineno)d] %(message)s', '%H:%M:%S')
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging_level)
-    console_handler.setFormatter(formatter)
-    Log.addHandler(console_handler)
+    # Logs
+    Log = getLogger()
     Log.info('Program starts')
 
+    # Arguments
     parser = GetParser()
     args = parser.parse_args()
-
-    Log.info('Arguments:\n  '+'\n  '.join([str(key)+': '+str(value)
+    Log.debug('Arguments:\n  '+'\n  '.join([str(key)+': '+str(value)
         for key, value in args.__dict__.items()]))
-    global SIZE, PTA, PTB
-    SIZE = (args.width, args.height)
-    PTA = (args.pta_x, args.pta_y)
-    PTB = (args.ptb_x, args.ptb_y)
+
+    # Arguments validation
+    if (args.pta == [None]) or (args.ptb == [None]):
+        Log.error('Points are not defined. Use -pta[x][y] and -ptb[x][y]')
+        exit()
+    if (args.rand == [None]) and (args.file == None):
+        Log.error('There is no maze source defined. '+\
+            'Use -rand[x][y] or -file[path]')
+        exit()
+    if (args.rand != [None]) and (args.file != None):
+        Log.error('There are two maze sources defined. Please remove one')
+        exit()
+
+    # Maze size and source
+    if (args.rand != [None]):
+        width, height = args.rand
+        source = 'R'
+    else:
+        width, height = img.GetSize(args.file)
+        source = 'F'
+
+    # Global variables
+    global SIZE, PTA, PTB, WALL, BLANK
+    SIZE = (width, height)
+    PTA = tuple(args.pta)
+    PTB = tuple(args.ptb)
     WALL, BLANK = False, True
 
+    # Info
+    Log.info('Maze size: '+str(SIZE))
     Log.info('Points: '+str(PTA)+' '+str(PTB))
-    Log.info('Straight line distance: '+str(round(pf.CheckDistance(PTA, PTB),1)))
+    Log.info('Straight line distance: '+str(round(pf.CheckDistance(PTA,PTB),1)))
 
+    # Points validation (check if in boundaries)
+    if (PTA[0] >= width) or (PTB[0] >= width) or\
+        (PTA[1] >= height) or (PTB[1] >= height):
+        Log.error('At least one point is out of boundaries')
+        exit()
+
+    # Global variables in other files
     maze.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
     img.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
     pf.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
 
-    Maze = maze.GetMaze()
-    Path = pf.FindPath(Maze)
+    # Load / Generate maze
+    if   source == 'R': Maze = maze.GetMaze()
+    elif source == 'F': Maze = img.GetMazeImg('maze.png')
 
+    # Find path
+    Path = pf.FindPath(Maze)
     Log.info('Path length: '+str(len(Path)))
 
-    path_map = MarkPoints(Path)
+    # Create path image
+    path_map = pf.MarkPoints(Path)
     image = img.GenerateImage(Maze, path_map, Scale=4)
     image.save('path.png')
