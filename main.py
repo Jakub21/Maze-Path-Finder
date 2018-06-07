@@ -65,42 +65,49 @@ def GetParser():
 
 
 ################################
-if __name__ == '__main__':
-    # Logs
+def main(Args, isinRecursion=False):
+    '''main.Main [Arg] {isinRecursion}
+    Calls all functions in order that depends on user's input
+    --------------------------------
+    Parameters
+    - Arg                   | argparse namespace
+    - isinRecursion         | default is False
+    --------------------------------
+    Returns
+    - Maze                  | 2D list only with values matching WALL and BLANK
+    - Path                  | List of points
+    '''
+    # Logger
     Log = getLogger()
-    Log.info('Program starts')
-
-    # Arguments
-    parser = GetParser()
-    args = parser.parse_args()
+    if not isinRecursion: Log.info('Program starts')
     Log.debug('Arguments:\n  '+'\n  '.join([str(key)+': '+str(value)
-        for key, value in args.__dict__.items()]))
+        for key, value in Args.__dict__.items()]))
 
     # Arguments validation
-    if (args.pta == [None]) or (args.ptb == [None]):
-        Log.error('Points are not defined. Use -pta[x][y] and -ptb[x][y]')
-        exit()
-    if (args.rand == [None]) and (args.file == None):
+    if (Args.pta == [None]) or (Args.ptb == [None]):
+        Log.error('Points are not defined')
+        raise ValueError('Points are not defined')
+    if (Args.rand == [None]) and (Args.file == None):
         Log.error('There is no maze source defined. '+\
             'Use -rand[x][y] or -file[path]')
-        exit()
-    if (args.rand != [None]) and (args.file != None):
+        raise ValueError('There is no maze source defined')
+    if (Args.rand != [None]) and (Args.file != None):
         Log.error('There are two maze sources defined. Please remove one')
-        exit()
+        raise ValueError('There are two maze sources defined. Please remove one')
 
     # Maze size and source
-    if (args.rand != [None]):
-        width, height = args.rand
+    if (Args.rand != [None]):
+        width, height = Args.rand
         source = 'R'
     else:
-        width, height = img.GetSize(args.file)
+        width, height = img.GetSize(Args.file)
         source = 'F'
 
     # Global variables
     global SIZE, PTA, PTB, WALL, BLANK
     SIZE = (width, height)
-    PTA = tuple(args.pta)
-    PTB = tuple(args.ptb)
+    PTA = tuple(Args.pta)
+    PTB = tuple(Args.ptb)
     WALL, BLANK = False, True
 
     # Info
@@ -112,7 +119,7 @@ if __name__ == '__main__':
     if (PTA[0] >= width) or (PTB[0] >= width) or\
         (PTA[1] >= height) or (PTB[1] >= height):
         Log.error('At least one point is out of boundaries')
-        exit()
+        raise ValueError('At least one point is out of boundaries')
 
     # Global variables in other files
     maze.InitGlobals(SIZE, PTA, PTB, (WALL, BLANK))
@@ -121,13 +128,33 @@ if __name__ == '__main__':
 
     # Load / Generate maze
     if   source == 'R': Maze = maze.GetMaze()
-    elif source == 'F': Maze = img.GetMazeImg('maze.png')
+    elif source == 'F': Maze = img.GetMazeImg(Args.file)
 
     # Find path
     Path = pf.FindPath(Maze)
+    if (Path == None) and (source == 'R'):
+        Log.info('Re-generating maze. There were no paths.')
+        return main(Args, isinRecursion=True)
+    if (Path == None) and (source == 'F'):
+        Log.error('There is not any path between these points in selected maze')
+        raise ValueError('There is not any path between these points in selected maze')
     Log.info('Path length: '+str(len(Path)))
 
+    return (Maze, Path)
+
+
+
+################################
+if __name__ == '__main__':
+    # Arguments
+    parser = GetParser()
+    args = parser.parse_args()
+
+    # Execute
+    Maze, Path = main(args)
+
     # Create path image
+    image_path = 'path.png'
     path_map = pf.MarkPoints(Path)
     image = img.GenerateImage(Maze, path_map, Scale=4)
-    image.save('path.png')
+    image.save(image_path)

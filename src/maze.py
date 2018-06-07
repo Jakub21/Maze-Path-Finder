@@ -73,7 +73,7 @@ def GetMaze():
     No parameters
     --------------------------------
     Returns
-    - Maze                  | 2D list, size and values are in global variables
+    - Maze                  | 2D list only with values matching WALL and BLANK
     '''
     Log.info('Generating maze')
     width, height = [el+1 for el in SIZE]
@@ -93,4 +93,7 @@ def GetMaze():
             for id in id_row: row += chunks[id][row_index]
             row = row[:width]
             Result.append(row)
-    return Result[:height]
+    Result = Result[:height]
+    Result[PTA[1]][PTA[0]] = BLANK
+    Result[PTB[1]][PTB[0]] = BLANK
+    return Result

@@ -68,7 +68,7 @@ def GetMazeImg(FileName):
     - FileName              | Name of file to load data from
     --------------------------------
     Returns
-    - Maze                  | 2D list, size and values are in global variables
+    - Maze                  | 2D list only with values matching WALL and BLANK
     '''
     Log.info('Loading maze')
     width, height = SIZE
@@ -124,6 +124,7 @@ def GenerateImage(Background, *Layers, Scale=1, MarkOrigPoints=True,
                 if layer[y][x]: pixels[x,y] = GetRGB(hsl)
 
     if Scale != 1:
+        Scale = int(Scale)
         Image = Image.resize((width*Scale, height*Scale))
 
     return Image

@@ -157,8 +157,11 @@ def GetMidPoint(Maze, ptA, ptB):
     range_b[ptB[1]][ptB[0]] = True
     Match = ()
     while Match == ():
+        range_a_old, range_b_old = range_a, range_b
         range_a = AddStep(Maze, range_a)
         range_b = AddStep(Maze, range_b)
+        if (range_a_old == range_a) or (range_b_old == range_b):
+            return # No valid paths exist
         pts_in_a = []
         pts_in_b = []
         for y in range(height):
@@ -188,6 +191,7 @@ def FindPath(Maze):
         new = PTB
         while CheckDistance(pta, new) > 1:
             new = GetMidPoint(Maze, pta, new)
+            if new == None: return
         Path.append(pta)
         Log.info('Direction: '+StepDir(pta, new))
         pta = new
