@@ -1,198 +1,96 @@
-'''Jakub21
-May 2018
-MIT License
-Python 3.6
---------------------------------
-Path finder
-Find path between two points in 2D list
-'''
-
-
-
-################################
+from datetime import datetime
 from math import sqrt
-import logging
-Log = logging.getLogger('MainLogger')
 
-
-
-################################
-def InitGlobals(Size, PtA, PtB, Values):
-    '''pathfinder.InitGlobals [Size] [PtA] [PtB] [Values]
-    Creates global variables that contain data from parameters.
-    Function must be called before any other in this file
-    --------------------------------
-    Parameters
-    - Size                  | Size of a maze to generate (2-tpl.: width, height)
-    - PtA                   | Starting point (2-tuple: x-coord, y-coord)
-    - PtB                   | Starting point (2-tuple: x-coord, y-coord)
-    - Values                | 2-tuple: Wall value, Blank value
-    --------------------------------
-    Returns None
+class PathFinder:
+    '''PathFinder class
+    Function set inherited by Run class
+    Used to find paths in maze
     '''
-    global SIZE, PTA, PTB
-    SIZE = Size
-    PTA, PTB = PtA, PtB
-    global WALL, BLANK
-    WALL, BLANK = Values
 
+    def get_time(self):
+        return datetime.now()
 
+    def make_2d_list(self, size, fill):
+        width, height = size
+        return [[fill for x in range(width)] for y in range(height)]
 
-################################
-def MarkPoints(PointList):
-    '''pathfinder.MarkPoints [PointList]
-    Creates 2D list, filled with False.
-    Value is changed to True if coordinate is in supplied list
-    --------------------------------
-    Parameters
-    - PointList             | List of points to mark
-    --------------------------------
-    Returns
-    - Map                   | 2D list with booleans
-    '''
-    width, height = SIZE
-    Map = [[False for x in range(width)] for y in range(height)]
-    for pt in PointList:
-        x, y = pt
-        Map[y][x] = True
-    return Map
+    def mark_points(self, list_of_points):
+        width, height = self.size
+        result = self.make_2d_list(self.size, fill=False)
+        for point in list_of_points:
+            x, y = point
+            result[y][x] = True
+        return result
 
+    def check_dist(self, pta, ptb):
+        xa, ya = pta
+        xb, yb = ptb
+        return sqrt( (xa-xb)**2 + (ya-yb)**2 )
 
+    def step_direction(self, pta, ptb):
+        xa, ya = pta
+        xb, yb = ptb
+        if xa == xb:
+            if ya == yb: return 'None'
+            if ya > yb: return 'Up'
+            if ya < yb: return 'Down'
+        else:
+            if ya != yb: return 'Complex'
+            if xa > xb: return 'Left'
+            if xa < xb: return 'Right'
+        raise TypeError('Undefined direction'+str(pta)+', '+str(ptb))
 
-################################
-def CheckDistance(PointA, PointB):
-    '''pathfinder.CheckDistance [PointA] [PointB]
-    Calculate distance between two points
-    --------------------------------
-    Parameters
-    - PointA                | Point (2-tuple: x-coord, y-coord)
-    - PointB                | Point (2-tuple: x-coord, y-coord)
-    --------------------------------
-    Returns
-    - Distance              | Distance between points
-    '''
-    xa, ya = PointA
-    xb, yb = PointB
-    return sqrt(((xa-xb)**2)+((ya-yb)**2))
-
-
-
-################################
-def StepDir(Old, New):
-    '''pathfinder.StepDir [Old] [New]
-    Direction of step (only 1-axis)
-    --------------------------------
-    Parameters
-    - Old                   | Point (2-tuple: x-coord, y-coord)
-    - New                   | Point (2-tuple: x-coord, y-coord)
-    --------------------------------
-    Returns
-    - Direction             | String
-    '''
-    xa, ya = Old
-    xb, yb = New
-    if xb > xa: return 'Right'
-    elif xb < xa: return 'Left'
-    elif yb > ya: return 'Down'
-    elif yb < ya: return 'Up'
-    else: return 'None'
-
-
-
-################################
-def AddStep(Maze, Range):
-    '''pathfinder.AddStep [Maze] [Range]
-    Receive map of points that could be reached in x moves and
-    create map of points that could be reached in x+1 moves.
-    --------------------------------
-    Parameters
-    - Maze                  | 2D list only with values matching WALL and BLANK
-    - Range                 | 2D list (booleans (reachable or not))
-    --------------------------------
-    Returns
-    - Range                 | 2D list (booleans (reachable or not))
-    '''
-    width, height = SIZE
-    NewRange = [[False for x in range(width)] for y in range(height)]
-    for y in range(height):
-        for x in range(width):
-            if Maze[y][x] == WALL: continue
-            top, bottom, left, right = [WALL]*4
-            try:
-                if y-1 > 0: top = Range[y-1][x]
-            except IndexError: pass
-            try:
-                if y+1 < height: bottom = Range[y+1][x]
-            except IndexError: pass
-            try:
-                if x-1 > 0: left = Range[y][x-1]
-            except IndexError: pass
-            try:
-                if x+1 < width: right = Range[y][x+1]
-            except IndexError: pass
-            if True in (Range[y][x], top, bottom, left, right):
-                NewRange[y][x] = True
-    return NewRange
-
-
-
-################################
-def GetMidPoint(Maze, ptA, ptB):
-    '''pathfinder.GetMidPoint [Maze] [ptA] [ptB]
-    Finds point that is as close as possible to both points.
-    Distances midpoint-ptA and midpoint-ptB are equal (+-1).
-    --------------------------------
-    Parameters
-    - Maze                  | 2D list only with values matching WALL and BLANK
-    - ptA                   | Point (2-tuple: x-coord, y-coord)
-    - ptB                   | Point (2-tuple: x-coord, y-coord)
-    --------------------------------
-    Returns
-    - Path                  | Point (2-tuple: x-coord, y-coord)
-    '''
-    width, height = SIZE
-    range_a = [[False for x in range(width)] for y in range(height)]
-    range_b = [[False for x in range(width)] for y in range(height)]
-    range_a[ptA[1]][ptA[0]] = True
-    range_b[ptB[1]][ptB[0]] = True
-    Match = ()
-    while Match == ():
-        range_a_old, range_b_old = range_a, range_b
-        range_a = AddStep(Maze, range_a)
-        range_b = AddStep(Maze, range_b)
-        if (range_a_old == range_a) or (range_b_old == range_b):
-            return # No valid paths exist
-        pts_in_a = []
-        pts_in_b = []
+    def add_step(self, inrange):
+        width, height = self.size
+        W, B = self.WALL, self.BLANK
+        result = self.make_2d_list(self.size, fill=False)
         for y in range(height):
             for x in range(width):
-                if range_a[y][x] and range_b[y][x]:
-                    Match = (x,y)
-    return Match
+                if self.maze[y][x] == W: continue
+                top, bottom, left, right = [W]*4
+                if y-1 > 0: top = inrange[y-1][x]
+                if y+1 < height: bottom = inrange[y+1][x]
+                if x-1 > 0: left = inrange[y][x-1]
+                if x+1 < width: right = inrange[y][x+1]
+                if True in (inrange[y][x], top, bottom, left, right):
+                    result[y][x] = True
+        return result
 
+    def get_mid_point(self, pta, ptb):
+        width, height = self.size
+        inrange_a = self.make_2d_list(self.size, fill=False)
+        inrange_b = self.make_2d_list(self.size, fill=False)
+        inrange_a[pta[1]][pta[0]] = True
+        inrange_b[ptb[1]][ptb[0]] = True
+        match = ()
+        while match == ():
+            oldrange_a, oldrange_b = inrange_a, inrange_b
+            inrange_a = self.add_step(inrange_a)
+            inrange_b = self.add_step(inrange_b)
+            if (oldrange_a == inrange_a) or (oldrange_b == inrange_b):
+                return # No valid path exists
+            for y in range(height):
+                for x in range(width):
+                    if inrange_a[y][x] and inrange_b[y][x]:
+                        match = (x,y)
+        return match
 
-
-################################
-def FindPath(Maze):
-    '''pathfinder.FindPath [Maze]
-    Finds the shortest (?) path between pt. A and B.
-    Points are global variables PTA and PTB
-    --------------------------------
-    Parameters
-    - Maze                  | 2D list only with values matching WALL and BLANK
-    --------------------------------
-    Returns
-    - Path                  | List of points (2-tuple: x-coord, y-coord)
-    '''
-    Log.info('Creating path')
-    Path = []
-    pta = PTA
-    while pta != PTB:
-        new = PTB
-        while CheckDistance(pta, new) > 1:
-            new = GetMidPoint(Maze, pta, new)
-            if new == None: return
-        Path.append(pta)
-        Log.info('Direction: '+StepDir(pta, new))
-        pta = new
-    return Path
+    def find_path(self):
+        start_time = self.get_time()
+        current = self.pta
+        path = []
+        while current != self.ptb:
+            midpoint = self.ptb
+            u = 0
+            while self.check_dist(current, midpoint) > 1:
+                u += 1
+                midpoint = self.get_mid_point(current, midpoint)
+                if midpoint == None:
+                    raise ValueError('There are no valid paths')
+            path += [current]
+            current = midpoint
+        end_time = self.get_time()
+        self.duration = end_time - start_time
+        self.path_length = len(path)
+        self.path = path
+        return path
