@@ -17,11 +17,55 @@ class Run(PathFinder):
             2-Tuple, x and y coordinate
         '''
         self.WALL, self.BLANK = maze.WALL, maze.BLANK
+        self.maze_object = maze
         self.maze = maze.board
         self.size = maze.size
         self.pta, self.ptb = pta, ptb
         if not self.validate_points():
             raise IndexError('At least one point is outside maze boundaries')
+
+    def __repr__(self, max_size=(50,50), show_info=True, path_char='O', wall_char='+',
+        blank_char=' ', bound_char='|'):
+        '''Representation string of a Run object
+        Parameters:
+        max_size [2-tuple of ints] ((50, 50))
+            If board size exceeds this limit, repr will not be added to text
+        show_info [boolean] (True)
+            If set to True, there will be added general info about the object
+        path_char [str]
+            Character to put in cells that are in the path
+        wall_char [str] ('+')
+            Character to put in cells with Wall value
+        blank_char [str] (' ')
+            Character to put in cells with Blank value
+        bound_char [str] ('|')
+            Character appended to every line
+        '''
+        try:
+            path_map = self.mark_points(self.path)
+            width, height = self.size
+            maxw, maxh = max_size
+            text = ''
+            if (width <= maxw) or (height <= maxh):
+                text = ''
+                for board_row, path_row in zip(self.maze, path_map):
+                    for board_cell, path_cell in zip(board_row, path_row):
+                        if path_cell == True:
+                            text += path_char
+                        else:
+                            if board_cell == self.WALL: text += wall_char
+                            elif board_cell == self.BLANK: text += blank_char
+                    text += bound_char+'\n'
+            if show_info:
+                text += 'Maze size: '+str(width)+' x '+str(height)+' cells\n'
+                text += 'Maze source: '+str(self.maze_object.src_type.upper())+'\n'
+                text += 'Path length: '+str(self.path_length)+'\n'
+                text += 'Path find time: '+str(self.duration)+'\n'
+        except AttributeError: # Path was not generated
+            text = self.maze_object.__repr__(max_size, show_info, wall_char,
+                blank_char, bound_char)
+            if show_info: text += '\nPath was not generated'
+        return text
 
     def validate_points(self):
         '''Check if both points are in maze boundaries'''

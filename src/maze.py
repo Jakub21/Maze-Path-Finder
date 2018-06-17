@@ -27,29 +27,32 @@ class Maze:
             self.size = self.read_img_size(source)
             self.board = self.load_maze_img()
 
-    def __repr__(self, max_size=(50,50), wall_char='X', blank_char=' ', bound_char='|'):
-        '''Representation string of a maze object
+    def __repr__(self, max_size=(50,50), show_info=True, wall_char='+', blank_char=' ', bound_char='|'):
+        '''Representation string of a Maze object
         Parameters:
-        max_size [2-tuple of ints]
-            If maze size exceeds this limit, only info will be shown
-        wall_char
+        max_size [2-tuple of ints] ((50, 50))
+            If maze size exceeds this limit, repr will not be added to text
+        show_info [boolean] (True)
+            If set to True, there will be added general info about the object
+        wall_char [str] ('+')
             Character to put in cells with Wall value
-        blank_char
+        blank_char [str] (' ')
             Character to put in cells with Blank value
-        bound_char
+        bound_char [str] ('|')
             Character appended to every line
         '''
         width, height = self.size
         maxw, maxh = max_size
-        if (width <= maxw) and (height <= maxh):
+        if (width <= maxw) or (height <= maxh):
             text = ''
             for row in self.board:
                 for cell in row:
                     if cell == self.WALL: text += wall_char
                     elif cell == self.BLANK: text += blank_char
                 text += bound_char+'\n'
-        text += 'Maze size: '+str(width)+' x '+str(height)+' cells\n'
-        text += 'Maze source: '+str(self.src_type.upper())
+        if show_info:
+            text += 'Maze size: '+str(width)+' x '+str(height)+' cells\n'
+            text += 'Maze source: '+str(self.src_type.upper())
         return text
 
     def get_src_type(self, src):
