@@ -1,10 +1,10 @@
-'''This file is an example how to use classes from this repository
+'''This file is an example on how to use classes from this repository
 '''
 from argparse import ArgumentParser
 from src.maze import Maze
 from src.run import Run
 
-def main(args):
+def execute(args):
     while True:
         # Create Maze object
         maze = Maze(args.source)
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     elif args.file != None: args.source = args.file
     else: raise TypeError('There is no maze source defined')
 
-    run = main(args)
+    run = execute(args)
 
     # Save path to image
     img_path = 'Path.png'
