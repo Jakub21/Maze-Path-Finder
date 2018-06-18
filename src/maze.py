@@ -43,8 +43,9 @@ class Maze:
         '''
         width, height = self.size
         maxw, maxh = max_size
-        if (width <= maxw) or (height <= maxh):
-            text = ''
+        text = ''
+        if ((width <= maxw) or (maxw == -1)) or \
+            ((height <= maxh) or (maxh == -1)):
             for row in self.board:
                 for cell in row:
                     if cell == self.WALL: text += wall_char

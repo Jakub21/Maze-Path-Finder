@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     # Save path to image
     img_path = 'Path.png'
-    image = run.gen_path_img(scale=7)
+    image = run.gen_path_img(scale=4)
     image.save(img_path)
 
     # Show how long it took to find a path and a path length

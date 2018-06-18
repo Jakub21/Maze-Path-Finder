@@ -46,8 +46,8 @@ class Run(PathFinder):
             width, height = self.size
             maxw, maxh = max_size
             text = ''
-            if (width <= maxw) or (height <= maxh):
-                text = ''
+            if ((width <= maxw) or (maxw == -1)) or \
+                ((height <= maxh) or (maxh == -1)):
                 for board_row, path_row in zip(self.maze, path_map):
                     for board_cell, path_cell in zip(board_row, path_row):
                         if path_cell == True:
